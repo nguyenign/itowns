@@ -228,22 +228,23 @@ Extent.prototype.dimensions = function dimensions(unit) {
  * Return true if coord is inside the bounding box.
  *
  * @param {Coordinates} coord
+ * @param {number} delta value to expand extent
  * @return {boolean}
  */
-Extent.prototype.isPointInside = function isPointInside(coord) {
+Extent.prototype.isPointInside = function isPointInside(coord, delta) {
     const c = (this.crs() == coord.crs) ? coord : coord.as(this.crs());
-
+    delta = delta == undefined ? 0 : delta;
     // TODO this ignores altitude
     if (crsIsGeographic(this.crs())) {
-        return c.longitude(this._internalStorageUnit) <= this.east() &&
-               c.longitude(this._internalStorageUnit) >= this.west() &&
-               c.latitude(this._internalStorageUnit) <= this.north() &&
-               c.latitude(this._internalStorageUnit) >= this.south();
+        return c.longitude(this._internalStorageUnit) <= this.east() + delta &&
+               c.longitude(this._internalStorageUnit) >= this.west() - delta &&
+               c.latitude(this._internalStorageUnit) <= this.north() + delta &&
+               c.latitude(this._internalStorageUnit) >= this.south() - delta;
     } else {
-        return c.x() <= this.east() &&
-               c.x() >= this.west() &&
-               c.y() <= this.north() &&
-               c.y() >= this.south();
+        return c.x() <= this.east() + delta &&
+               c.x() >= this.west() - delta &&
+               c.y() <= this.north() + delta &&
+               c.y() >= this.south() - delta;
     }
 };
 
