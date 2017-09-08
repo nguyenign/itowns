@@ -9,7 +9,7 @@
 import * as THREE from 'three';
 import Sphere from '../../Core/Math/Sphere';
 import AnimationPlayer, { Animation, AnimatedExpression } from '../../Core/AnimationPlayer';
-import Coordinates, { C } from '../../Core/Geographic/Coordinates';
+import Coordinates, { C, ellipsoidSizes } from '../../Core/Geographic/Coordinates';
 import { computeTileZoomFromDistanceCamera, computeDistanceCameraFromTileZoom } from '../../Process/GlobeTileProcessing';
 
 // TODO:
@@ -1660,6 +1660,18 @@ GlobeControls.prototype.pixelsToMeters = function pixelsToMeters(pixels, pixelPi
     const scaled = this.getScale(pixelPitch);
     const size = pixels * pixelPitch;
     return size / scaled / 1000;
+};
+
+/**
+ * To convert the projection in degree WGS84 on the globe of a number of pixels of screen
+ * @param      {number} pixels count pixels to project
+ * @param      {number} pixelPitch Screen pixel pitch, in millimeters (default = 0.28 mm / standard pixel size of 0.28 millimeters as defined by the OGC)
+ * @return     {number} projection in degree on globe
+ */
+GlobeControls.prototype.pixelsToDegrees = function pixelsToDegrees(pixels, pixelPitch = 0.28) {
+    const chord = this.pixelsToMeters(pixels, pixelPitch);
+    const rayon = ellipsoidSizes().x;
+    return 2 * Math.asin(chord / (2 * rayon)) * 180 / Math.PI;
 };
 
 /**
