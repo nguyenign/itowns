@@ -130,6 +130,20 @@ Projection.prototype.WGS84toWMTS = function WGS84toWMTS(bbox) {
     return new Extent('WMTS:WGS84G', zoom, row, col);
 };
 
+Projection.prototype.CoordinatetoWMTS = function CoordinatetoWMTS(coordinate, zoom) {
+    // TODO convertir.....les coordonnees
+    const nY = Math.pow(2, zoom);
+    const nX = 2 * nY;
+
+    const uX = MathExt.TWO_PI / nX;
+    const uY = MathExt.PI / nY;
+
+    const col = Math.floor((MathExt.PI + coordinate.longitude(UNIT.RADIAN)) / uX);
+    const row = Math.floor(nY - (MathExt.PI_OV_TWO + coordinate.latitude(UNIT.RADIAN)) / uY);
+
+    return new Extent('WMTS:WGS84G', zoom, row, col);
+};
+
 Projection.prototype.UnitaryToLongitudeWGS84 = function UnitaryToLongitudeWGS84(u, bbox) {
     const dim = bbox.dimensions(UNIT.RADIAN);
     return bbox.west(UNIT.RADIAN) + u * dim.x;
