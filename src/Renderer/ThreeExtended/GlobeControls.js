@@ -1405,14 +1405,27 @@ GlobeControls.prototype.setRange = function setRange(range, isAnimated) {
  * @return {Promise<void>}
  */
 GlobeControls.prototype.setOrbitalPosition = function setOrbitalPosition(position, isAnimated) {
+    let current = this.getCameraTargetPosition();
     isAnimated = isAnimated === undefined ? this.isAnimationEnabled() : isAnimated;
     const deltaPhi = position.tilt === undefined ? 0 : position.tilt * Math.PI / 180 - this.getTiltRad();
     const deltaTheta = position.heading === undefined ? 0 : position.heading * Math.PI / 180 - this.getHeadingRad();
     const deltaRange = position.range === undefined ? 0 : position.range - this.getRange();
+    this._view.callbacksOnAfterRender.set('refreshTarget', () => {
+        const newTarget = this._view.getPickingPositionFromDepth();
+        const range = current.length();
+        const errorRange = range - current.dot(newTarget) / range;
+        if (isAnimated) {
+            sphericalTo.radius += errorRange;
+        } else {
+            this.moveOrbitalPosition(errorRange, 0, 0, false);
+        }
+        current = newTarget;
+    });
     return this.moveOrbitalPosition(deltaRange, deltaTheta, deltaPhi, isAnimated).then(() => {
         this._view.notifyChange(true);
         return this.waitSceneLoaded().then(() => {
             this.updateCameraTransformation();
+            this._view.callbacksOnAfterRender.delete('refreshTarget');
         });
     });
 };
