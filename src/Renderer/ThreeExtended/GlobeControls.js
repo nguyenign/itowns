@@ -1332,6 +1332,8 @@ function GlobeControls(view, target, radius, options = {}) {
     if (enableTargetHelper) {
         cameraTargetOnGlobe.add(new THREE.AxisHelper(500000));
         this._view.scene.add(pickingHelper);
+        cameraTargetOnGlobe.updateMatrix();
+        cameraTargetOnGlobe.updateMatrixWorld(true);
     }
 
     // Start position
@@ -1343,10 +1345,11 @@ function GlobeControls(view, target, radius, options = {}) {
     _handlerMouseMove = onMouseMove.bind(this);
     _handlerMouseUp = onMouseUp.bind(this);
 
-    this.waitSceneLoaded().then(() => {
-        this.updateCameraTransformation();
-        this._view.notifyChange(true, this.camera);
-    });
+    // TEST ME
+    // this._view.notifyChange(true, this.camera);
+    // this.waitSceneLoaded().then(() => {
+    //     this.updateCameraTransformation();
+    // });
 }
 
 GlobeControls.prototype = Object.create(THREE.EventDispatcher.prototype);
