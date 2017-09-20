@@ -1400,6 +1400,7 @@ GlobeControls.prototype.setRange = function setRange(range, isAnimated) {
  * @return {Promise<void>}
  */
 GlobeControls.prototype.setOrbitalPosition = function setOrbitalPosition(position, isAnimated) {
+    this.updateCameraTransformation();
     let current = this.getCameraTargetPosition();
     isAnimated = isAnimated === undefined ? this.isAnimationEnabled() : isAnimated;
     const deltaPhi = position.tilt === undefined ? 0 : position.tilt * Math.PI / 180 - this.getTiltRad();
