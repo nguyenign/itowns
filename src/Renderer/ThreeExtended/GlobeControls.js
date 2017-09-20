@@ -1410,7 +1410,7 @@ GlobeControls.prototype.setOrbitalPosition = function setOrbitalPosition(positio
     const deltaPhi = position.tilt === undefined ? 0 : position.tilt * Math.PI / 180 - this.getTiltRad();
     const deltaTheta = position.heading === undefined ? 0 : position.heading * Math.PI / 180 - this.getHeadingRad();
     const deltaRange = position.range === undefined ? 0 : position.range - this.getRange();
-    this._view.callbacksOnAfterRender.set('refreshTarget', () => {
+    this._view.onAfterRender = () => {
         const newTarget = this._view.getPickingPositionFromDepth();
         const range = current.length();
         const errorRange = range - current.dot(newTarget) / range;
@@ -1420,12 +1420,12 @@ GlobeControls.prototype.setOrbitalPosition = function setOrbitalPosition(positio
             this.moveOrbitalPosition(errorRange, 0, 0, false);
         }
         current = newTarget;
-    });
+    };
     return this.moveOrbitalPosition(deltaRange, deltaTheta, deltaPhi, isAnimated).then(() => {
         this._view.notifyChange(true);
         return this.waitSceneLoaded().then(() => {
             this.updateCameraTransformation();
-            this._view.callbacksOnAfterRender.delete('refreshTarget');
+            this._view.onAfterRender = () => {};
         });
     });
 };
