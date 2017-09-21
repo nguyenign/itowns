@@ -22,7 +22,7 @@ KML_Provider.prototype.loadKMZ = function loadKMZ(longitude, latitude) {
             var child = result.scene.children[0];
             var coorCarto = result.coorCarto;
 
-            var position = this.ellipsoid.cartographicToCartesian(coorCarto);
+            var position = this.ellipsoid.cartographicToCartesian(coorCarto).position;
             coorCarto.altitude = 0;
             var normal = this.ellipsoid.geodeticSurfaceNormalCartographic(coorCarto);
 

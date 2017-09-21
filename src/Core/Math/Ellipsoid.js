@@ -59,7 +59,7 @@ Ellipsoid.prototype.cartographicToCartesian = function cartographicToCartesian(c
 
     // n.multiplyScalar(0.0);
 
-    return k.add(n);
+    return { position: k.add(n), normal: n };
 };
 
 /**
@@ -103,7 +103,7 @@ Ellipsoid.prototype.cartesianToCartographic = function cartesianToCartographic(p
 Ellipsoid.prototype.cartographicToCartesianArray = function cartographicToCartesianArray(coordCartoArray) {
     var cartesianArray = [];
     for (var i = 0; i < coordCartoArray.length; i++) {
-        cartesianArray.push(this.cartographicToCartesian(coordCartoArray[i]));
+        cartesianArray.push(this.cartographicToCartesian(coordCartoArray[i]).position);
     }
 
     return cartesianArray;

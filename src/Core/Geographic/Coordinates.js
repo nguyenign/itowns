@@ -135,7 +135,9 @@ function _convert(coordsIn, newCrs, target) {
     } else {
         if (coordsIn.crs === 'EPSG:4326' && newCrs === 'EPSG:4978') {
             const cartesian = ellipsoid.cartographicToCartesian(coordsIn);
-            return target.set(newCrs, cartesian);
+            target.set(newCrs, cartesian.position);
+            target.normal = cartesian.normal;
+            return target;
         }
 
         if (coordsIn.crs === 'EPSG:4978' && newCrs === 'EPSG:4326') {
