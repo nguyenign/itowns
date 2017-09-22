@@ -215,7 +215,7 @@ const tSphere = new Sphere();
 tSphere.picking = { position: new THREE.Vector3(), normal: new THREE.Vector3() };
 
 // Set to true to enable target helper
-const enableTargetHelper = false;
+const enableTargetHelper = true;
 let pickingHelper;
 
 if (enableTargetHelper) {
@@ -653,8 +653,6 @@ function GlobeControls(view, target, radius, options = {}) {
         // using small-angle approximation cos(x/2) = 1 - x^2 / 8
 
         if (lastPosition.distanceToSquared(this.camera.position) > EPS || 8 * (1 - lastQuaternion.dot(this.camera.quaternion)) > EPS) {
-            this.camera.updateMatrix();
-            this.camera.updateMatrixWorld(true);
             this._view.notifyChange(true, this.camera);
 
             lastPosition.copy(this.camera.position);
@@ -701,6 +699,9 @@ function GlobeControls(view, target, radius, options = {}) {
         const previousCameraTargetOnGlobe = cameraTargetOnGlobe.position.clone();
 
         // Get distance camera DME
+
+        // FIX IT rallenti, TODO faire convenablement
+        this._view.mainLoop._step(this._view);
         const pickingPosition = view.getPickingPositionFromDepth();
 
         if (!pickingPosition) {
@@ -1324,10 +1325,16 @@ function GlobeControls(view, target, radius, options = {}) {
     update();
 
     if (enableTargetHelper) {
-        cameraTargetOnGlobe.add(new THREE.AxisHelper(500000));
+        const helperTarget = new THREE.AxisHelper(500000);
+        cameraTargetOnGlobe.add(helperTarget);
         this._view.scene.add(pickingHelper);
         cameraTargetOnGlobe.updateMatrix();
         cameraTargetOnGlobe.updateMatrixWorld(true);
+        const layerTHREEjs = view.mainLoop.gfxEngine.getUniqueThreejsLayer();
+        cameraTargetOnGlobe.layers.set(layerTHREEjs);
+        helperTarget.layers.set(layerTHREEjs);
+        cameraTargetOnGlobe.layers.set(layerTHREEjs);
+        this.camera.layers.enable(layerTHREEjs);
     }
 
     // Start position
@@ -1340,10 +1347,10 @@ function GlobeControls(view, target, radius, options = {}) {
     _handlerMouseUp = onMouseUp.bind(this);
 
     // TEST ME
-    // this._view.notifyChange(true, this.camera);
-    // this.waitSceneLoaded().then(() => {
-    //     this.updateCameraTransformation();
-    // });
+    this._view.notifyChange(true, this.camera);
+    this.waitSceneLoaded().then(() => {
+        this.updateCameraTransformation();
+    });
 }
 
 GlobeControls.prototype = Object.create(THREE.EventDispatcher.prototype);
@@ -1478,8 +1485,8 @@ GlobeControls.prototype.setCameraTargetPosition = function setCameraTargetPositi
     isAnimated = isAnimated === undefined ? this.isAnimationEnabled() : isAnimated;
     const center = this.getCameraTargetPosition();
 
-    const geo2Target = new Coordinates(this._view.referenceCrs, position).as('EPSG:4326');
-    const startAltitude = geo2Target.altitude();
+    // const geo2Target = new Coordinates(this._view.referenceCrs, position).as('EPSG:4326');
+    // const startAltitude = geo2Target.altitude();
 
     if (position.range) {
         // Compensation of the altitude from the approximation of the ellipsoid by a sphere
@@ -1500,10 +1507,10 @@ GlobeControls.prototype.setCameraTargetPosition = function setCameraTargetPositi
     ptScreenClick.y = this.domElement.height / 2;
 
     const vFrom = center.clone().normalize();
-    const vTo = position.normalize();
+    const vTo = position.clone().normalize();
 
     let promise;
-    let tile;
+    // let tile;
 
     const startRange = this.getRange();
 
@@ -1540,23 +1547,22 @@ GlobeControls.prototype.setCameraTargetPosition = function setCameraTargetPositi
             animatedScale = 0.0;
             this.resetControls();
         });
+        return promise.then(() => {
+            this._view.notifyChange(true);
+            return this.waitSceneLoaded().then(() => {
+                this.updateCameraTransformation();
+            });
+        });
     }
     else {
+        // NOTE : Axe Z est aligné sur la coordonnées finale;
         quatGlobe.setFromUnitVectors(vFrom, vTo);
         this.updateCameraTransformation(CONTROL_STATE.MOVE_GLOBE);
-        // TODO fix
         if (position.range) {
             this.setRange(position.range, false);
         }
-        promise = Promise.resolve();
+        return Promise.resolve();
     }
-
-    return promise.then(() => {
-        this._view.notifyChange(true);
-        return this.waitSceneLoaded().then(() => {
-            this.updateCameraTransformation();
-        });
-    });
 };
 
 /**
